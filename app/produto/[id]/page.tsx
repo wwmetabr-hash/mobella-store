@@ -5,12 +5,13 @@ import Footer from '@/components/Footer'
 import PDPClient from './PDPClient'
 
 export async function generateStaticParams() {
-  return getActiveProducts().map(p => ({ id: p.id }))
+  const products = await getActiveProducts()
+  return products.map(p => ({ id: p.id }))
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const product = getProduct(id)
+  const product = await getProduct(id)
   if (!product) notFound()
 
   const swatches = product.colors.map(c => ({ label: c, hex: swatchColor(c) }))

@@ -8,29 +8,29 @@ function checkAuth(req: NextRequest) {
   return token === ADMIN_PASSWORD
 }
 
-export function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-  return NextResponse.json(getAllProducts())
+  return NextResponse.json(await getAllProducts())
 }
 
 export async function POST(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   const product: Product = await req.json()
-  const products = getAllProducts()
+  const products = await getAllProducts()
   const idx = products.findIndex(p => p.id === product.id)
   if (idx >= 0) {
     products[idx] = product
   } else {
     products.push(product)
   }
-  saveProducts(products)
+  await saveProducts(products)
   return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   const { id } = await req.json()
-  const products = getAllProducts().filter(p => p.id !== id)
-  saveProducts(products)
+  const products = (await getAllProducts()).filter(p => p.id !== id)
+  await saveProducts(products)
   return NextResponse.json({ ok: true })
 }

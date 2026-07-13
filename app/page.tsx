@@ -5,9 +5,9 @@ import Footer from '@/components/Footer'
 import NewsletterForm from '@/components/NewsletterForm'
 import { getActiveProducts, getOrderedCategories, formatPrice } from '@/lib/products'
 
-export default function Home() {
-  const products   = getActiveProducts()
-  const categories = getOrderedCategories()
+export default async function Home() {
+  const products   = await getActiveProducts()
+  const categories = await getOrderedCategories()
   const featured   = products.find(p => p.id === 'mirella') || products[0]
 
   return (

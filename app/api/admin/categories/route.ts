@@ -7,42 +7,39 @@ function checkAuth(req: NextRequest) {
   return req.cookies.get('admin_token')?.value === ADMIN_PASSWORD
 }
 
-export function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-  return NextResponse.json(getAllCategories())
+  return NextResponse.json(await getAllCategories())
 }
 
 export async function POST(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   const cat: Category = await req.json()
-  const cats = getAllCategories()
+  const cats = await getAllCategories()
   const idx = cats.findIndex(c => c.id === cat.id)
   if (idx >= 0) cats[idx] = cat
   else cats.push(cat)
-  saveCategories(cats)
+  await saveCategories(cats)
   return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   const { id } = await req.json()
-  saveCategories(getAllCategories().filter(c => c.id !== id))
+  await saveCategories((await getAllCategories()).filter(c => c.id !== id))
   return NextResponse.json({ ok: true })
 }
 
 export async function PATCH(req: NextRequest) {
-  // rename: { oldId, newId, newLabel }
   if (!checkAuth(req)) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   const { oldId, newId, newLabel, newSlug } = await req.json()
-  // update categories
-  const cats = getAllCategories().map(c =>
+  const cats = (await getAllCategories()).map(c =>
     c.id === oldId ? { ...c, id: newId, label: newLabel, slug: newSlug } : c
   )
-  saveCategories(cats)
-  // update all products that had this category
-  const products = getAllProducts().map(p =>
+  await saveCategories(cats)
+  const products = (await getAllProducts()).map(p =>
     p.cat === oldId ? { ...p, cat: newId } : p
   )
-  saveProducts(products)
+  await saveProducts(products)
   return NextResponse.json({ ok: true })
 }
