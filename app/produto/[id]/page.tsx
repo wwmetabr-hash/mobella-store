@@ -5,8 +5,9 @@ import Footer from '@/components/Footer'
 import PDPClient from './PDPClient'
 
 export async function generateStaticParams() {
-  const products = await getActiveProducts()
-  return products.map(p => ({ id: p.id }))
+  // usa o JSON estático durante o build para não depender de rede
+  const { default: data } = await import('../../../data/products.json')
+  return data.filter((p: { active: boolean }) => p.active).map((p: { id: string }) => ({ id: p.id }))
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {

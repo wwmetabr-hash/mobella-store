@@ -24,8 +24,8 @@ export type Category = {
 
 // ── Upstash REST helpers ──────────────────────────────────────────────────────
 
-const KV_URL   = process.env.UPSTASH_REDIS_REST_URL
-const KV_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN
+const KV_URL   = process.env.UPSTASH_REDIS_REST_URL?.replace(/^﻿/, '').trim()
+const KV_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN?.replace(/^﻿/, '').trim()
 
 async function kvGet<T>(key: string): Promise<T | null> {
   if (!KV_URL || !KV_TOKEN) return null
