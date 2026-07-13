@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllProducts, saveProducts, Product } from '@/lib/products'
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'mobella2024'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? ''
+const SESSION_SECRET = process.env.SESSION_SECRET ?? `mbsess_${ADMIN_PASSWORD}`
 
 function checkAuth(req: NextRequest) {
-  const token = req.cookies.get('admin_token')?.value
-  return token === ADMIN_PASSWORD
+  if (!ADMIN_PASSWORD) return false
+  return req.cookies.get('admin_token')?.value === SESSION_SECRET
 }
 
 export async function GET(req: NextRequest) {
@@ -18,11 +19,8 @@ export async function POST(req: NextRequest) {
   const product: Product = await req.json()
   const products = await getAllProducts()
   const idx = products.findIndex(p => p.id === product.id)
-  if (idx >= 0) {
-    products[idx] = product
-  } else {
-    products.push(product)
-  }
+  if (idx >= 0) products[idx] = product
+  else products.push(product)
   await saveProducts(products)
   return NextResponse.json({ ok: true })
 }

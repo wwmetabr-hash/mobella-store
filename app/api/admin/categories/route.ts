@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllCategories, saveCategories, getAllProducts, saveProducts, Category } from '@/lib/products'
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'mobella2024'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? ''
+const SESSION_SECRET = process.env.SESSION_SECRET ?? `mbsess_${ADMIN_PASSWORD}`
 
 function checkAuth(req: NextRequest) {
-  return req.cookies.get('admin_token')?.value === ADMIN_PASSWORD
+  if (!ADMIN_PASSWORD) return false
+  return req.cookies.get('admin_token')?.value === SESSION_SECRET
 }
 
 export async function GET(req: NextRequest) {

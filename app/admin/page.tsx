@@ -50,7 +50,6 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
           {err && <div className="admin-msg-err" style={{ marginBottom: 16 }}>{err}</div>}
           <button type="submit" className="admin-btn-primary" style={{ width: '100%', padding: '13px' }}>Entrar</button>
         </form>
-        <p style={{ marginTop: 20, fontSize: 12, color: '#bbb', textAlign: 'center' }}>Senha padrão: <code>mobella2024</code></p>
       </div>
     </div>
   )
