@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const ADMIN_PASSWORD  = process.env.ADMIN_PASSWORD  ?? ''
-const SESSION_SECRET  = process.env.SESSION_SECRET  ?? `mbsess_${ADMIN_PASSWORD}`
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD ?? '').replace(/^﻿/, '').trim()
+const SESSION_SECRET = (process.env.SESSION_SECRET ?? `mbsess_${ADMIN_PASSWORD}`).replace(/^﻿/, '').trim()
 
 export async function POST(req: NextRequest) {
   if (!ADMIN_PASSWORD) return NextResponse.json({ error: 'Admin não configurado' }, { status: 503 })
   const { password } = await req.json()
-  if (password !== ADMIN_PASSWORD) {
+  if (password.trim() !== ADMIN_PASSWORD) {
     return NextResponse.json({ error: 'Senha incorreta' }, { status: 401 })
   }
   const res = NextResponse.json({ ok: true })
