@@ -32,19 +32,21 @@ const jetbrains = JetBrains_Mono({
   display: 'swap',
 })
 
+const FAVICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI0U1RERENCIvPjx0ZXh0IHg9IjUwIiB5PSI0NiIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzgiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMyQjMyNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGxldHRlci1zcGFjaW5nPSItMSI+bW88L3RleHQ+PHRleHQgeD0iNTEiIHk9IjgwIiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSIzMSIgZm9udC1zdHlsZT0iaXRhbGljIiBmaWxsPSIjQzA4OTY4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5iZWxsYS48L3RleHQ+PC9zdmc+'
+
 export const metadata: Metadata = {
   title: 'Mobella — Móveis feitos em Curitiba',
   description: 'Poltronas, cadeiras e sofás feitos e entregues em Curitiba, PR. Conforto real, design honesto.',
-  icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
-  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${archivoNarrow.variable} ${cormorant.variable} ${inter.variable} ${jetbrains.variable}`}>
+      <head>
+        <link rel="icon" type="image/svg+xml" href={FAVICON} />
+        <link rel="shortcut icon" href={FAVICON} />
+        <link rel="apple-touch-icon" href={FAVICON} />
+      </head>
       <body>
         <CartProvider>
           {children}
