@@ -63,21 +63,44 @@ function ProductModal({ product, categories, onSave, onClose }: {
   onSave: (p: Product) => Promise<void>
   onClose: () => void
 }) {
-  const [p, setP]     = useState<Product>({ ...product })
+  const [p, setP]         = useState<Product>({ ...product })
+  const [photosRaw, setPhotosRaw] = useState(product.photos.join('\n'))
+  const [colorsRaw, setColorsRaw] = useState(product.colors.join('\n'))
+  const [specsRaw, setSpecsRaw]   = useState(product.specs.map(([k, v]) => `${k}|${v}`).join('\n'))
+  const [storyRaw, setStoryRaw]   = useState(product.story.join('\n'))
   const [saving, setSaving] = useState(false)
 
   function field<K extends keyof Product>(key: K, val: Product[K]) {
     setP(prev => ({ ...prev, [key]: val }))
   }
 
+  function parseSpecs(raw: string): [string, string][] {
+    return raw.split('\n')
+      .map(l => { const [k, ...vs] = l.split('|'); return [k?.trim() ?? '', vs.join('|').trim()] as [string, string] })
+      .filter(([k]) => k.trim() !== '')
+  }
+
   async function handleSave() {
     if (!p.id) return alert('Preencha o ID do produto.')
     if (!p.name) return alert('Preencha o nome do produto.')
     if (!p.cat) return alert('Selecione uma categoria.')
+    const final: Product = {
+      ...p,
+      photos: photosRaw.split('\n').map(s => s.trim()).filter(Boolean),
+      colors: colorsRaw.split('\n').map(s => s.trim()).filter(Boolean),
+      specs:  parseSpecs(specsRaw),
+      story:  storyRaw.split('\n').map(s => s.trim()).filter(Boolean),
+    }
     setSaving(true)
-    await onSave(p)
+    await onSave(final)
     setSaving(false)
   }
+
+  function photoSrc(photo: string) {
+    return photo.startsWith('http') ? photo : `/products/${photo}`
+  }
+
+  const previewPhotos = photosRaw.split('\n').map(s => s.trim()).filter(Boolean)
 
   return (
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
@@ -114,25 +137,39 @@ function ProductModal({ product, categories, onSave, onClose }: {
 
         <div className="admin-field">
           <label>Descrição curta (aparece na página do produto)</label>
-          <textarea value={p.desc} onChange={e => field('desc', e.target.value)} />
+          <textarea value={p.desc} onChange={e => field('desc', e.target.value)} onKeyDown={e => e.stopPropagation()} />
         </div>
 
         <div className="admin-field">
-          <label>Fotos — um nome de arquivo por linha (ex: bella-1.jpg)</label>
+          <label>Fotos — uma URL ou nome de arquivo por linha</label>
           <textarea
-            value={p.photos.join('\n')}
-            onChange={e => field('photos', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
-            style={{ minHeight: 72 }}
-            placeholder={'bella-1.jpg\nbella-2.jpg\nbella-3.jpg'}
+            value={photosRaw}
+            onChange={e => setPhotosRaw(e.target.value)}
+            onKeyDown={e => e.stopPropagation()}
+            style={{ minHeight: 90 }}
+            placeholder={'bella-1.jpg\nhttps://drive.google.com/uc?id=SEU_ID\nhttps://i.imgur.com/exemplo.jpg'}
           />
-          <p className="admin-field-hint">Os arquivos devem estar na pasta <code>public/products/</code> do projeto.</p>
+          <p className="admin-field-hint">
+            Aceita: nome do arquivo da pasta <code>public/products/</code> <strong>ou</strong> link direto (https://...).
+            Para Google Drive: clique com botão direito na imagem → "Obter link" → altere o link para formato <code>https://drive.google.com/uc?id=ID_DO_ARQUIVO</code>.
+          </p>
+          {previewPhotos.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+              {previewPhotos.map((ph, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={i} src={photoSrc(ph)} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 3, border: '1px solid #eee', background: '#f4f4f2' }}
+                  onError={e => { (e.target as HTMLImageElement).style.opacity = '0.2' }} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="admin-field">
           <label>Cores disponíveis — uma por linha</label>
           <textarea
-            value={p.colors.join('\n')}
-            onChange={e => field('colors', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+            value={colorsRaw}
+            onChange={e => setColorsRaw(e.target.value)}
+            onKeyDown={e => e.stopPropagation()}
             style={{ minHeight: 72 }}
             placeholder={'Chenille bege\nChenille cinza\nVeludo verde'}
           />
@@ -141,24 +178,22 @@ function ProductModal({ product, categories, onSave, onClose }: {
         <div className="admin-field">
           <label>Especificações — formato "Chave|Valor", uma por linha</label>
           <textarea
-            value={p.specs.map(([k, v]) => `${k}|${v}`).join('\n')}
-            onChange={e => field('specs',
-              e.target.value.split('\n')
-                .map(l => { const [k, ...vs] = l.split('|'); return [k?.trim() ?? '', vs.join('|').trim()] as [string, string] })
-                .filter(([k]) => k)
-            )}
+            value={specsRaw}
+            onChange={e => setSpecsRaw(e.target.value)}
+            onKeyDown={e => e.stopPropagation()}
             style={{ minHeight: 100 }}
             placeholder={'Medidas|A 80 · L 68 · P 80 cm\nRevestimento|Chenille / veludo\nFabricação|Curitiba, PR'}
           />
         </div>
 
         <div className="admin-field">
-          <label>História do produto — parágrafos, um por linha (pode usar &lt;strong&gt; e &lt;em&gt;)</label>
+          <label>História do produto — parágrafos, um por linha</label>
           <textarea
-            value={p.story.join('\n')}
-            onChange={e => field('story', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+            value={storyRaw}
+            onChange={e => setStoryRaw(e.target.value)}
+            onKeyDown={e => e.stopPropagation()}
             style={{ minHeight: 80 }}
-            placeholder={'A <strong>Bella</strong> é a poltrona <em>coringa</em>.\nQuatro revestimentos e um formato que combina com qualquer sala.'}
+            placeholder={'A Bella é a poltrona coringa.\nQuatro revestimentos e um formato que combina com qualquer sala.'}
           />
         </div>
 

@@ -126,8 +126,8 @@ export default async function Home() {
               const items = products.filter(p => p.cat === cat.id)
               if (!items.length) return null
               return (
-                <div key={cat.id} style={{ display: 'contents' }} id={cat.slug}>
-                  <div className="pc-group">
+                <div key={cat.id} style={{ display: 'contents' }}>
+                  <div className="pc-group" id={cat.slug}>
                     <span className="pc-group__t">
                       {cat.label.slice(0, -1)}<em>{cat.label.slice(-1)}</em>
                     </span>
@@ -189,15 +189,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ── Newsletter ── */}
-        <section className="newsletter">
-          <div className="container">
-            <div className="newsletter__inner">
-              <h3>fique por <em>dentro</em></h3>
-              <NewsletterForm />
-            </div>
-          </div>
-        </section>
+        {/* newsletter removida temporariamente */}
       </main>
 
       <Footer />
