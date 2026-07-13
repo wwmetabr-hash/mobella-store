@@ -266,7 +266,7 @@ export default function AdminPage() {
   useEffect(() => {
     fetch('/api/admin/products').then(r => {
       setAuthed(r.ok)
-      if (r.ok) { r.json().then(setProducts); fetch('/api/admin/categories').then(r2 => r2.ok && r2.json().then(setCategories)) }
+      if (r.ok) { r.json().then(setProducts); fetch('/api/admin/categories').then(r2 => { if (r2.ok) r2.json().then(setCategories) }) }
     }).catch(() => setAuthed(false))
   }, [])
 
