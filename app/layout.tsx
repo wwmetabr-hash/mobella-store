@@ -35,6 +35,10 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Mobella — Móveis feitos em Curitiba',
   description: 'Poltronas, cadeiras e sofás feitos e entregues em Curitiba, PR. Conforto real, design honesto.',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
