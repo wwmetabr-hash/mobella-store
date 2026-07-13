@@ -1,0 +1,5 @@
+[
+  { "id": "Poltrona", "label": "Poltronas", "slug": "poltronas", "order": 1 },
+  { "id": "Cadeira", "label": "Cadeiras", "slug": "cadeiras", "order": 2 },
+  { "id": "Sofá",    "label": "Sofás",     "slug": "sofas",     "order": 3 }
+]
