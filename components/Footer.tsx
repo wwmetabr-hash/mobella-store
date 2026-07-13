@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 const CNPJ = '67.234.688/0001-45'
-const WHATSAPP = '5541995699860'
+const WHATSAPP = '5541995699560'
 const EMAIL = 'mobellabr@gmail.com'
 const YEAR = new Date().getFullYear()
 

@@ -37,7 +37,7 @@ export default function PoliticaDeTrocas() {
                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '-0.01em', marginBottom: 14 }}>Como solicitar</h2>
                 <p>Entre em contato por um dos canais abaixo, informando: número do pedido, motivo da solicitação e fotos do produto (quando aplicável).</p>
                 <ul style={{ paddingLeft: 24, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <li><strong>WhatsApp:</strong> <a href="https://wa.me/5541995699860" style={{ color: 'var(--terracotta)' }}>(41) 99569-9860</a></li>
+                  <li><strong>WhatsApp:</strong> <a href="https://wa.me/5541995699560" style={{ color: 'var(--terracotta)' }}>(41) 99569-9860</a></li>
                   <li><strong>E-mail:</strong> <a href="mailto:mobellabr@gmail.com" style={{ color: 'var(--terracotta)' }}>mobellabr@gmail.com</a></li>
                 </ul>
                 <p style={{ marginTop: 12 }}>Respondemos em até 2 dias úteis. Após análise, orientaremos sobre os próximos passos para devolução ou troca.</p>
