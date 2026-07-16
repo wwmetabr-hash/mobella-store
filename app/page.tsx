@@ -18,13 +18,13 @@ export default async function Home() {
         {/* ── Hero ── */}
         <section className="hero">
           <div className="hero__left">
-            <p className="hero__eyebrow">Curitiba, PR · feito aqui, entregue aqui</p>
+            <p className="hero__eyebrow">Curitiba, PR · escolhidos a dedo, entregues aqui</p>
             <h1 className="hero__title">
               senta,<br />e <em>fica.</em>
             </h1>
             <p className="hero__lede">
-              Poltronas, cadeiras e sofás fabricados em Curitiba.
-              Sem atravessador, sem frete absurdo, sem esperar meses.
+              Poltronas, cadeiras e sofás selecionados com cuidado.
+              Entrega em Curitiba sem complicação, sem frete absurdo, sem esperar meses.
             </p>
             <Link href="#produtos" className="btn btn-dark">
               Ver coleção <span className="btn-arrow">→</span>
@@ -44,7 +44,7 @@ export default async function Home() {
                 <small>{featured.cat} {featured.name}</small>
                 <strong>{formatPrice(featured.price)}</strong>
               </div>
-              <div className="hero__badge-spin" aria-hidden="true">feito em Curitiba</div>
+              <div className="hero__badge-spin" aria-hidden="true">Curitiba, PR</div>
             </div>
           )}
         </section>
@@ -75,7 +75,7 @@ export default async function Home() {
               ) : null
             })}
             <a
-              href="https://wa.me/5541999999999"
+              href="https://wa.me/5541995699560"
               target="_blank"
               rel="noopener"
               className="cat-card"
@@ -96,20 +96,20 @@ export default async function Home() {
             <div className="editorial__img">
               <Image
                 src={`/products/${featured.photos[1]}`}
-                alt="Como a Mobella faz seus móveis"
+                alt="Mobella — curadoria de móveis em Curitiba"
                 fill
                 style={{ objectFit: 'cover' }}
               />
             </div>
           )}
           <div className="editorial__text">
-            <p className="editorial__kicker">Fabricação própria</p>
-            <h2>como <em>fazemos</em></h2>
+            <p className="editorial__kicker">Nossa curadoria</p>
+            <h2>como <em>escolhemos</em></h2>
             <p>
-              Cada peça começa pelo corte da madeira aqui em Curitiba. O estofamento é costurado à mão, o acabamento é conferido peça a peça antes de sair da fábrica.
+              Cada peça que entra na Mobella passa por uma seleção rigorosa de materiais e acabamento. Chenille, veludo, linho — testados para durar e envelhecer bem.
             </p>
             <p>
-              Sem depósito no interior, sem galpão terceirizado. Você compra diretamente de quem fabrica — por isso o preço é honesto e o prazo é real.
+              Você compra com clareza: sem intermediários desnecessários, sem prazo inventado. Só o móvel que vai sentar de verdade na sua sala.
             </p>
           </div>
         </section>
@@ -118,7 +118,7 @@ export default async function Home() {
         <div className="container" id="produtos">
           <div className="section-intro" id="novidades">
             <h2>toda a <em>coleção</em></h2>
-            <p>{products.length} peças · feitas em Curitiba</p>
+            <p>{products.length} peças disponíveis</p>
           </div>
 
           <div className="product-grid">
@@ -170,8 +170,8 @@ export default async function Home() {
           <div className="container">
             <div className="values__grid">
               <div className="values__item">
-                <h4>Feito em Curitiba</h4>
-                <p>Produção local, entrega local. Sem esperar dois meses para ter o móvel em casa.</p>
+                <h4>Entrega em Curitiba</h4>
+                <p>Baseados em Curitiba, entregamos com nossa própria equipe. Sem surpresas no prazo.</p>
               </div>
               <div className="values__item">
                 <h4>Tecido à escolha</h4>

@@ -24,6 +24,12 @@ export default function PDPClient({ product: p, swatches }: Props) {
   const { add } = useCart()
   const [activePhoto, setActivePhoto] = useState(0)
   const [activeColor, setActiveColor] = useState(0)
+
+  const currentPhotos = (
+    p.colorPhotos?.find(cp => cp.color === p.colors[activeColor])?.photos?.length
+      ? p.colorPhotos.find(cp => cp.color === p.colors[activeColor])!.photos
+      : p.photos
+  )
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
 
@@ -57,20 +63,20 @@ export default function PDPClient({ product: p, swatches }: Props) {
           {/* Galeria */}
           <div className="pdp__gallery">
             <div className="pdp__thumbs">
-              {p.photos.map((photo, i) => (
+              {currentPhotos.map((photo, i) => (
                 <button
                   key={i}
                   className={`pdp__thumb${activePhoto === i ? ' active' : ''}`}
                   onClick={() => setActivePhoto(i)}
                 >
-                  <Image src={`/products/${photo}`} alt={`${p.name} ${i + 1}`} width={72} height={72} style={{ objectFit: 'cover' }} />
+                  <Image src={photo.startsWith('http') ? photo : `/products/${photo}`} alt={`${p.name} ${i + 1}`} width={72} height={72} style={{ objectFit: 'cover' }} />
                 </button>
               ))}
             </div>
             <div className="pdp__main">
-              {p.photos[activePhoto] && (
+              {currentPhotos[activePhoto] && (
                 <Image
-                  src={`/products/${p.photos[activePhoto]}`}
+                  src={currentPhotos[activePhoto].startsWith('http') ? currentPhotos[activePhoto] : `/products/${currentPhotos[activePhoto]}`}
                   alt={p.name}
                   fill
                   style={{ objectFit: 'cover' }}
@@ -78,7 +84,7 @@ export default function PDPClient({ product: p, swatches }: Props) {
                 />
               )}
               <div className="pdp__badge">
-                {p.name} · {String(activePhoto + 1).padStart(2, '0')} de {String(p.photos.length).padStart(2, '0')}
+                {p.name} · {String(activePhoto + 1).padStart(2, '0')} de {String(currentPhotos.length).padStart(2, '0')}
               </div>
             </div>
           </div>
@@ -109,7 +115,7 @@ export default function PDPClient({ product: p, swatches }: Props) {
                   className={`swatch${activeColor === i ? ' active' : ''}`}
                   title={sw.label}
                   style={{ background: sw.hex }}
-                  onClick={() => setActiveColor(i)}
+                  onClick={() => { setActiveColor(i); setActivePhoto(0) }}
                 />
               ))}
             </div>
@@ -128,7 +134,7 @@ export default function PDPClient({ product: p, swatches }: Props) {
                 {added ? 'Adicionado ✓' : <>Adicionar à sacola <span className="btn-arrow">→</span></>}
               </button>
               <a
-                href={`https://wa.me/5541999999999?text=Olá! Tenho interesse na ${p.cat} ${p.name} (${formatPrice(p.price)})`}
+                href={`https://wa.me/5541995699560?text=Olá! Tenho interesse na ${p.cat} ${p.name} (${formatPrice(p.price)})`}
                 target="_blank"
                 rel="noopener"
                 className="btn-whatsapp"
@@ -158,9 +164,9 @@ export default function PDPClient({ product: p, swatches }: Props) {
             )}
           </div>
           <div className="pdp__story-img">
-            {p.photos[1] && (
+            {currentPhotos[1] && (
               <Image
-                src={`/products/${p.photos[1]}`}
+                src={currentPhotos[1].startsWith('http') ? currentPhotos[1] : `/products/${currentPhotos[1]}`}
                 alt={`${p.name} em ambiente`}
                 fill
                 style={{ objectFit: 'cover' }}

@@ -9,7 +9,7 @@ const TICKER_ITEMS = [
   { text: '@mobellabr', href: 'https://instagram.com/mobellabr' },
   { text: 'pouco, mas inteiro', href: null },
   { text: 'mobellamoveis.com.br', href: null },
-  { text: 'feito e entregue em Curitiba', href: null },
+  { text: 'selecionado, entregue em Curitiba', href: null },
 ]
 
 export default function Header() {
@@ -70,7 +70,7 @@ export default function Header() {
             <button className="header__navbtn" onClick={() => goToCategory('cadeiras')}>Cadeiras</button>
             <button className="header__navbtn" onClick={() => goToCategory('sofas')}>Sofás</button>
             <Link href="/quem-somos" className="header__navlink" onClick={() => setMenuOpen(false)}>Quem somos</Link>
-            <Link href="/como-fazemos" className="header__navlink" onClick={() => setMenuOpen(false)}>Como fazemos</Link>
+            <Link href="/como-fazemos" className="header__navlink" onClick={() => setMenuOpen(false)}>Como escolhemos</Link>
             <div className="header__mobile-divider" />
             <a href="https://wa.me/5541995699560" target="_blank" rel="noopener" className="header__navlink">(41) 99569-9560</a>
             <Link href="/sacola" className="header__navlink" onClick={() => setMenuOpen(false)}>

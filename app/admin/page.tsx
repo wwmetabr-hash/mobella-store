@@ -5,8 +5,9 @@ import Image from 'next/image'
 
 type Product = {
   id: string; name: string; cat: string; price: number; unit: string | null
-  photos: string[]; desc: string; colors: string[]; specs: [string,string][]
-  story: string[]; active: boolean
+  photos: string[]; desc: string; colors: string[]
+  colorPhotos?: Array<{ color: string; photos: string[] }>
+  specs: [string,string][]; story: string[]; active: boolean
 }
 
 type Category = { id: string; label: string; slug: string; order: number }
@@ -15,7 +16,8 @@ type View = 'dashboard' | 'produtos' | 'categorias'
 
 const PRODUCT_EMPTY: Product = {
   id: '', name: '', cat: '', price: 0, unit: null,
-  photos: [], desc: '', colors: [''], specs: [['Medidas',''],['Fabricação','Curitiba, PR']], story: [''], active: true
+  photos: [], desc: '', colors: [''], colorPhotos: [],
+  specs: [['Medidas',''],['Fabricação','Curitiba, PR']], story: [''], active: true
 }
 
 function fmt(n: number) {
@@ -65,6 +67,11 @@ function ProductModal({ product, categories, onSave, onClose }: {
   const [p, setP]         = useState<Product>({ ...product })
   const [photosRaw, setPhotosRaw] = useState(product.photos.join('\n'))
   const [colorsRaw, setColorsRaw] = useState(product.colors.join('\n'))
+  const [colorPhotosRaw, setColorPhotosRaw] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {}
+    product.colorPhotos?.forEach(cp => { map[cp.color] = cp.photos.join('\n') })
+    return map
+  })
   const [specsRaw, setSpecsRaw]   = useState(product.specs.map(([k, v]) => `${k}|${v}`).join('\n'))
   const [storyRaw, setStoryRaw]   = useState(product.story.join('\n'))
   const [saving, setSaving] = useState(false)
@@ -83,10 +90,15 @@ function ProductModal({ product, categories, onSave, onClose }: {
     if (!p.id) return alert('Preencha o ID do produto.')
     if (!p.name) return alert('Preencha o nome do produto.')
     if (!p.cat) return alert('Selecione uma categoria.')
+    const colors = colorsRaw.split('\n').map(s => s.trim()).filter(Boolean)
+    const colorPhotos = colors
+      .map(color => ({ color, photos: (colorPhotosRaw[color] || '').split('\n').map(s => s.trim()).filter(Boolean) }))
+      .filter(cp => cp.photos.length > 0)
     const final: Product = {
       ...p,
       photos: photosRaw.split('\n').map(s => s.trim()).filter(Boolean),
-      colors: colorsRaw.split('\n').map(s => s.trim()).filter(Boolean),
+      colors,
+      colorPhotos,
       specs:  parseSpecs(specsRaw),
       story:  storyRaw.split('\n').map(s => s.trim()).filter(Boolean),
     }
@@ -173,6 +185,34 @@ function ProductModal({ product, categories, onSave, onClose }: {
             placeholder={'Chenille bege\nChenille cinza\nVeludo verde'}
           />
         </div>
+
+        {colorsRaw.split('\n').map(s => s.trim()).filter(Boolean).length > 0 && (
+          <div className="admin-field">
+            <label>Fotos por cor — URLs ou nomes de arquivo, uma por linha em cada cor</label>
+            <p className="admin-field-hint">Se uma cor não tiver fotos próprias, o produto mostra as fotos gerais acima. Na loja, ao clicar na cor, a galeria muda automaticamente.</p>
+            {colorsRaw.split('\n').map(s => s.trim()).filter(Boolean).map(color => (
+              <div key={color} style={{ marginBottom: 16 }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--terracotta)', marginBottom: 6 }}>{color}</div>
+                <textarea
+                  value={colorPhotosRaw[color] || ''}
+                  onChange={e => setColorPhotosRaw(prev => ({ ...prev, [color]: e.target.value }))}
+                  onKeyDown={e => e.stopPropagation()}
+                  style={{ minHeight: 64, marginBottom: 0 }}
+                  placeholder={`fotos da cor "${color}", uma URL ou arquivo por linha`}
+                />
+                {(colorPhotosRaw[color] || '').split('\n').map(s => s.trim()).filter(Boolean).length > 0 && (
+                  <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                    {(colorPhotosRaw[color] || '').split('\n').map(s => s.trim()).filter(Boolean).map((ph, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={ph.startsWith('http') ? ph : `/products/${ph}`} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 3, border: '1px solid #eee', background: '#f4f4f2' }}
+                        onError={e => { (e.target as HTMLImageElement).style.opacity = '0.2' }} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="admin-field">
           <label>Especificações — formato "Chave|Valor", uma por linha</label>

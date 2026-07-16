@@ -10,6 +10,7 @@ export type Product = {
   photos: string[]
   desc: string
   colors: string[]
+  colorPhotos?: Array<{ color: string; photos: string[] }>
   specs: [string, string][]
   story: string[]
   active: boolean
