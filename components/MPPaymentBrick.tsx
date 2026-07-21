@@ -37,7 +37,9 @@ export default function MPPaymentBrick({ preferenceId, amount, onSuccess, onErro
           },
         },
       }}
-      onSubmit={async ({ formData }: { formData: Record<string, unknown> }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onSubmit={async (param: any) => {
+        const formData = param?.formData ?? param
         const r = await fetch('/api/checkout/mp/payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
