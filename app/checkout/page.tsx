@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -15,46 +15,44 @@ function formatPrice(n: number) {
   return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-const SHIPPING_OPTS = [
-  { id: 'padrao', name: 'Entrega padrão', desc: '5 a 10 dias úteis · Curitiba e região', price: 'A combinar' },
-  { id: 'transportadora', name: 'Transportadora', desc: '10 a 20 dias úteis · todo o Brasil', price: 'A combinar' },
-  { id: 'retirada', name: 'Retirar em Curitiba', desc: 'Combinar local e horário via WhatsApp', price: 'Grátis' },
-]
+type PixData = { qrCode: string; qrBase64: string }
 
 export default function CheckoutPage() {
   const { items, total, clear } = useCart()
   const router = useRouter()
+  const [email, setEmail] = useState('')
   const [shipping, setShipping] = useState('retirada')
-  const [email, setEmail]         = useState('')
-  const [nome, setNome]           = useState('')
-  const [sobrenome, setSobrenome] = useState('')
-  const [cpf, setCpf]             = useState('')
-  const [tel, setTel]             = useState('')
-  const [loading, setLoading]     = useState(false)
-  const [erro, setErro]           = useState('')
+  const [loading, setLoading] = useState(false)
+  const [erro, setErro] = useState('')
   const [preferenceId, setPreferenceId] = useState<string | null>(null)
+  const [pixData, setPixData] = useState<PixData | null>(null)
+  const [copied, setCopied] = useState(false)
+  const brickRef = useRef<HTMLDivElement>(null)
 
-  async function handleContinuar() {
+  const shippingOpts = [
+    { id: 'retirada', name: 'Retirar em Curitiba', desc: 'Combinar via WhatsApp · sem custo', price: 'Grátis' },
+    { id: 'padrao', name: 'Entrega padrão', desc: '5–10 dias úteis · Curitiba e região', price: 'A combinar' },
+    { id: 'transportadora', name: 'Transportadora', desc: '10–20 dias úteis · todo o Brasil', price: 'A combinar' },
+  ]
+
+  async function handleIrPagar() {
+    if (!email) { setErro('Informe seu e-mail para continuar.'); return }
     if (items.length === 0) return
     setLoading(true)
     setErro('')
     try {
-      const payer = email || nome ? {
-        email: email || undefined,
-        first_name: nome || undefined,
-        last_name: sobrenome || undefined,
-        identification: cpf ? { type: 'CPF', number: cpf.replace(/\D/g, '') } : undefined,
-        phone: tel ? { number: tel.replace(/\D/g, '') } : undefined,
-      } : undefined
-
       const r = await fetch('/api/checkout/mp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, payer }),
+        body: JSON.stringify({
+          items,
+          payer: { email },
+        }),
       })
       const data = await r.json()
       if (!r.ok) { setErro('Erro ao iniciar pagamento. Tente novamente.'); return }
       setPreferenceId(data.id)
+      setTimeout(() => brickRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200)
     } catch {
       setErro('Erro de conexão. Tente novamente.')
     } finally {
@@ -67,164 +65,223 @@ export default function CheckoutPage() {
     router.push('/obrigado')
   }
 
-  const step = preferenceId ? 2 : 1
+  function handlePix(data: PixData) {
+    setPixData(data)
+    setTimeout(() => brickRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+  }
+
+  function copiarCodigo() {
+    if (!pixData) return
+    navigator.clipboard.writeText(pixData.qrCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 3000)
+  }
+
+  if (items.length === 0 && !pixData) {
+    return (
+      <>
+        <Header />
+        <main>
+          <div className="container" style={{ padding: '80px 48px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--muted)', marginBottom: 24 }}>Sua sacola está vazia.</p>
+            <Link href="/" className="btn btn-dark">Ver produtos <span className="btn-arrow">→</span></Link>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
 
   return (
     <>
       <Header />
       <main className="checkout-page">
         <div className="container">
-          <h1>finalize em <em>3 passos.</em></h1>
-
-          <div className="stepper">
-            <div className={`stepper__step${step > 1 ? ' done' : ' active'}`}>{step > 1 ? '✓' : '01'} Seus dados</div>
-            <span className="stepper__sep">›</span>
-            <div className={`stepper__step${step === 2 ? ' active' : ''}`}>02 Pagamento</div>
-            <span className="stepper__sep">›</span>
-            <div className="stepper__step">03 Confirmação</div>
-          </div>
+          <h1>finalizar <em>pedido.</em></h1>
 
           <div className="checkout-layout">
+            {/* ── Coluna esquerda ── */}
             <div>
-              {/* ── Passo 1: dados ── */}
-              {step === 1 && (
-                <>
-                  <div className="checkout-section">
-                    <div className="checkout-num">01</div>
-                    <h3>Seus dados</h3>
-                    <div className="form-grid">
-                      <div className="field span2">
-                        <label>E-mail <span style={{ color: '#c00' }}>*</span></label>
-                        <input type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-                      </div>
-                      <div className="field">
-                        <label>Nome</label>
-                        <input type="text" placeholder="Nome" value={nome} onChange={e => setNome(e.target.value)} />
-                      </div>
-                      <div className="field">
-                        <label>Sobrenome</label>
-                        <input type="text" placeholder="Sobrenome" value={sobrenome} onChange={e => setSobrenome(e.target.value)} />
-                      </div>
-                      <div className="field">
-                        <label>CPF</label>
-                        <input type="text" placeholder="000.000.000-00" value={cpf} onChange={e => setCpf(e.target.value)} />
-                      </div>
-                      <div className="field">
-                        <label>Celular</label>
-                        <input type="tel" placeholder="(41) 99999-9999" value={tel} onChange={e => setTel(e.target.value)} />
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="checkout-section">
-                    <div className="checkout-num">02</div>
-                    <h3>Endereço de entrega</h3>
-                    <div className="form-grid">
-                      <div className="field"><label>CEP</label><input type="text" placeholder="80000-000" /></div>
-                      <div className="field"><label>Estado</label><input type="text" defaultValue="PR" /></div>
-                      <div className="field span2"><label>Rua / Avenida</label><input type="text" placeholder="Nome da rua" /></div>
-                      <div className="field"><label>Número</label><input type="text" placeholder="123" /></div>
-                      <div className="field"><label>Complemento</label><input type="text" placeholder="Apto, bloco..." /></div>
-                      <div className="field"><label>Bairro</label><input type="text" placeholder="Bairro" /></div>
-                      <div className="field"><label>Cidade</label><input type="text" defaultValue="Curitiba" /></div>
-                    </div>
-                  </div>
-
-                  <div className="checkout-section">
-                    <div className="checkout-num">03</div>
-                    <h3>Frete</h3>
-                    <div className="shipping-opts">
-                      {SHIPPING_OPTS.map(opt => (
-                        <label key={opt.id} className={`shipping-opt${shipping === opt.id ? ' selected' : ''}`} onClick={() => setShipping(opt.id)}>
-                          <input type="radio" name="shipping" value={opt.id} checked={shipping === opt.id} onChange={() => setShipping(opt.id)} />
-                          <div className="shipping-opt__info">
-                            <div className="shipping-opt__name">{opt.name}</div>
-                            <div className="shipping-opt__desc">{opt.desc}</div>
-                          </div>
-                          <div className="shipping-opt__price">{opt.price}</div>
-                        </label>
-                      ))}
-                    </div>
-                    <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 12, lineHeight: 1.5 }}>
-                      O valor do frete será combinado via WhatsApp antes da confirmação.
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {/* ── Passo 2: pagamento ── */}
-              {step === 2 && preferenceId && (
-                <div className="checkout-section">
-                  <div className="checkout-num">04</div>
-                  <h3>Pagamento</h3>
-                  <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 24, lineHeight: 1.6 }}>
-                    Escolha a forma de pagamento. Cartão, Pix e boleto disponíveis.
-                  </p>
-                  <MPPaymentBrick
-                    preferenceId={preferenceId}
-                    amount={total}
-                    onSuccess={handleSuccess}
-                    onError={msg => setErro(msg)}
+              {/* Bloco 1: e-mail */}
+              <div className="checkout-section">
+                <div className="checkout-num">01</div>
+                <h3>Seu e-mail</h3>
+                <div className="field" style={{ maxWidth: 400 }}>
+                  <label>E-mail <span style={{ color: 'var(--terracotta)' }}>*</span></label>
+                  <input
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    disabled={!!preferenceId}
+                    style={{ opacity: preferenceId ? 0.6 : 1 }}
                   />
-                  {erro && <p style={{ color: '#c00', fontSize: 13, marginTop: 16 }}>{erro}</p>}
-                  <button
-                    onClick={() => { setPreferenceId(null); setErro('') }}
-                    style={{ marginTop: 16, fontSize: 12, color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                  >
-                    ← Voltar e editar dados
-                  </button>
+                  <p className="admin-field-hint" style={{ marginTop: 6 }}>Usado para confirmação e recibo do pagamento.</p>
                 </div>
-              )}
+              </div>
+
+              {/* Bloco 2: frete */}
+              <div className="checkout-section">
+                <div className="checkout-num">02</div>
+                <h3>Entrega</h3>
+                <div className="shipping-opts">
+                  {shippingOpts.map(opt => (
+                    <label
+                      key={opt.id}
+                      className={`shipping-opt${shipping === opt.id ? ' selected' : ''}`}
+                      onClick={() => !preferenceId && setShipping(opt.id)}
+                      style={{ opacity: preferenceId ? 0.6 : 1, cursor: preferenceId ? 'default' : 'pointer' }}
+                    >
+                      <input type="radio" name="shipping" value={opt.id} checked={shipping === opt.id} onChange={() => setShipping(opt.id)} disabled={!!preferenceId} />
+                      <div className="shipping-opt__info">
+                        <div className="shipping-opt__name">{opt.name}</div>
+                        <div className="shipping-opt__desc">{opt.desc}</div>
+                      </div>
+                      <div className="shipping-opt__price">{opt.price}</div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bloco 3: pagamento */}
+              <div className="checkout-section" ref={brickRef}>
+                <div className="checkout-num">03</div>
+                <h3>Pagamento</h3>
+
+                {!preferenceId && (
+                  <>
+                    {erro && <p style={{ color: 'var(--terracotta)', fontSize: 13, marginBottom: 16 }}>{erro}</p>}
+                    <button
+                      className="btn btn-dark"
+                      style={{ opacity: loading ? 0.6 : 1 }}
+                      onClick={handleIrPagar}
+                      disabled={loading}
+                    >
+                      {loading ? 'Carregando…' : <>Escolher forma de pagamento <span className="btn-arrow">→</span></>}
+                    </button>
+                    <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 12 }}>
+                      Você escolherá cartão, Pix ou boleto no próximo passo.
+                    </p>
+                  </>
+                )}
+
+                {/* Pix QR code inline */}
+                {pixData && (
+                  <div style={{ maxWidth: 480 }}>
+                    <div style={{ background: 'var(--olive)', color: 'white', borderRadius: 4, padding: '12px 20px', marginBottom: 24, fontSize: 14, fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 20 }}>✓</span> Pix gerado! Pague dentro de 30 minutos.
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                      {pixData.qrBase64 && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={`data:image/png;base64,${pixData.qrBase64}`}
+                          alt="QR Code Pix"
+                          style={{ width: 180, height: 180, border: '1px solid #e8e6e0', borderRadius: 4, background: 'white', padding: 8 }}
+                        />
+                      )}
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12, lineHeight: 1.6 }}>
+                          Escaneie o QR code com o app do seu banco ou copie o código abaixo:
+                        </p>
+                        <div style={{ background: '#f4f4f2', borderRadius: 3, padding: '10px 14px', fontSize: 11, fontFamily: 'var(--font-mono)', wordBreak: 'break-all', color: 'var(--ink)', marginBottom: 12, lineHeight: 1.5 }}>
+                          {pixData.qrCode.slice(0, 80)}…
+                        </div>
+                        <button
+                          onClick={copiarCodigo}
+                          className="btn btn-dark"
+                          style={{ fontSize: 13, padding: '10px 20px' }}
+                        >
+                          {copied ? '✓ Copiado!' : 'Copiar código Pix'}
+                        </button>
+                        <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12, lineHeight: 1.5 }}>
+                          Após o pagamento, você receberá confirmação por e-mail. Dúvidas?{' '}
+                          <a href="https://wa.me/5541995699560" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)' }}>Fale no WhatsApp.</a>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 32, borderTop: '1px solid rgba(27,32,37,.06)', paddingTop: 24, display: 'flex', gap: 12 }}>
+                      <Link href="/" className="btn btn-dark" onClick={() => clear?.()}>
+                        Ver mais produtos <span className="btn-arrow">→</span>
+                      </Link>
+                      <a href="https://wa.me/5541995699560" target="_blank" rel="noopener" className="btn" style={{ border: '1px solid var(--ink)', color: 'var(--ink)' }}>
+                        WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment Brick */}
+                {preferenceId && !pixData && (
+                  <div style={{ marginTop: 8 }}>
+                    {erro && <p style={{ color: 'var(--terracotta)', fontSize: 13, marginBottom: 16 }}>{erro}</p>}
+                    <MPPaymentBrick
+                      preferenceId={preferenceId}
+                      amount={total}
+                      onSuccess={handleSuccess}
+                      onPix={handlePix}
+                      onError={msg => setErro(msg)}
+                    />
+                    <button
+                      onClick={() => { setPreferenceId(null); setErro('') }}
+                      style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      ← Editar e-mail ou entrega
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Resumo */}
+            {/* ── Resumo ── */}
             <div className="checkout-summary">
               <h3>Seu pedido</h3>
-              {items.length === 0 ? (
-                <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-                  Sacola vazia. <Link href="/" style={{ textDecoration: 'underline' }}>Ver produtos</Link>
-                </p>
-              ) : (
-                <>
-                  {items.map(item => (
-                    <div key={item.id} className="checkout-summary__item">
-                      <div className="checkout-summary__img">
-                        {item.photo && (
-                          <Image
-                            src={item.photo.startsWith('http') ? item.photo : `/products/${item.photo}`}
-                            alt={item.name}
-                            width={56} height={56}
-                            style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <div className="checkout-summary__name">{item.name} × {item.qty}</div>
-                        <div className="checkout-summary__price">{formatPrice(item.price * item.qty)}</div>
-                      </div>
-                    </div>
-                  ))}
-                  <hr className="checkout-summary__divider" />
-                  <div className="checkout-summary__row"><span>Subtotal</span><span>{formatPrice(total)}</span></div>
-                  <div className="checkout-summary__row"><span>Frete</span><span>{shipping === 'retirada' ? 'Grátis' : 'A combinar'}</span></div>
-                  <div className="checkout-summary__total"><span>Total</span><span>{formatPrice(total)}</span></div>
-                </>
-              )}
+              {items.map(item => (
+                <div key={item.id} className="checkout-summary__item">
+                  <div className="checkout-summary__img">
+                    {item.photo && (
+                      <Image
+                        src={item.photo.startsWith('http') ? item.photo : `/products/${item.photo}`}
+                        alt={item.name}
+                        width={56} height={56}
+                        style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <div className="checkout-summary__name">{item.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>{item.color}{item.unit ? ` · ${item.unit}` : ''} · qtd {item.qty}</div>
+                    <div className="checkout-summary__price">{formatPrice(item.price * item.qty)}</div>
+                  </div>
+                </div>
+              ))}
 
-              {step === 1 && (
-                <>
-                  {erro && <p style={{ color: '#c00', fontSize: 13, marginTop: 12 }}>{erro}</p>}
-                  <button
-                    className="btn btn-terra"
-                    style={{ width: '100%', justifyContent: 'center', marginTop: 20, opacity: loading || items.length === 0 ? 0.6 : 1 }}
-                    onClick={handleContinuar}
-                    disabled={loading || items.length === 0}
-                  >
-                    {loading ? 'Aguarde…' : <>Ir para pagamento <span className="btn-arrow">→</span></>}
-                  </button>
-                  <div className="ssl-badge">🔒 Pagamento seguro</div>
-                </>
-              )}
+              <hr className="checkout-summary__divider" />
+              <div className="checkout-summary__row"><span>Subtotal</span><span>{formatPrice(total)}</span></div>
+              <div className="checkout-summary__row">
+                <span>Frete</span>
+                <span style={{ color: shipping === 'retirada' ? 'var(--olive)' : 'var(--muted)' }}>
+                  {shipping === 'retirada' ? 'Grátis' : 'A combinar'}
+                </span>
+              </div>
+              <div className="checkout-summary__total"><span>Total</span><span>{formatPrice(total)}</span></div>
+
+              <div style={{ marginTop: 20, padding: '14px 16px', background: '#f4f4f2', borderRadius: 4 }}>
+                <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Precisa de ajuda?</div>
+                <a
+                  href={`https://wa.me/5541995699560?text=Olá! Estou finalizando um pedido na Mobella e preciso de ajuda.`}
+                  target="_blank"
+                  rel="noopener"
+                  style={{ fontSize: 13, color: 'var(--terracotta)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  💬 Falar no WhatsApp
+                </a>
+              </div>
+
+              <div className="ssl-badge">🔒 Pagamento seguro · Mercado Pago</div>
             </div>
           </div>
         </div>
