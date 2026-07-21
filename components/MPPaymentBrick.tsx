@@ -37,7 +37,7 @@ export default function MPPaymentBrick({ preferenceId, amount, onSuccess, onErro
           },
         },
       }}
-      onSubmit={async (formData) => {
+      onSubmit={async ({ formData }: { formData: Record<string, unknown> }) => {
         const r = await fetch('/api/checkout/mp/payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
